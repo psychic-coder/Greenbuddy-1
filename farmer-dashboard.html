@@ -1,461 +1,547 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Farmer Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
-  <style>
-    /* Reset & base */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Farmer Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Reset & base */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      font-family: 'Poppins', Arial, sans-serif;
-      background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
-      min-height: 100vh;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem;
-    }
+      body {
+        font-family: "Poppins", Arial, sans-serif;
+        background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
+        min-height: 100vh;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem;
+      }
 
-    header {
-      background: rgba(255 255 255 / 0.15);
-      backdrop-filter: saturate(180%) blur(10px);
-      padding: 1.5rem 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgb(0 0 0 / 0.1);
-      text-align: center;
-      color: #fff;
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 2rem;
-      width: 100%;
-      max-width: 900px;
-      user-select: none;
-    }
+      header {
+        background: rgba(255 255 255 / 0.15);
+        backdrop-filter: saturate(180%) blur(10px);
+        padding: 1.5rem 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.1);
+        text-align: center;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        width: 100%;
+        max-width: 900px;
+        user-select: none;
+      }
 
-    .container {
-      background: #fff;
-      border-radius: 16px;
-      max-width: 900px;
-      width: 100%;
-      padding: 2rem 2.5rem;
-      box-shadow: 0 12px 30px rgb(0 0 0 / 0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-
-    form h2 {
-      font-weight: 700;
-      font-size: 1.8rem;
-      color: #2f6627;
-      margin-bottom: 1.5rem;
-      letter-spacing: 1px;
-    }
-
-    form input,
-    form select {
-      font-family: inherit;
-      font-size: 1rem;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1.25rem;
-      border-radius: 10px;
-      border: 1.8px solid #a8d08d;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-      outline-offset: 2px;
-    }
-
-    form input:focus,
-    form select:focus {
-      border-color: #4caf50;
-      box-shadow: 0 0 8px #4caf50aa;
-      outline: none;
-    }
-
-    form button {
-      background-color: #4caf50;
-      color: white;
-      font-weight: 600;
-      font-size: 1.1rem;
-      padding: 0.75rem 0;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      letter-spacing: 1.2px;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 6px 12px rgb(76 175 80 / 0.5);
-      user-select: none;
-    }
-
-    form button:hover {
-      background-color: #3e8e41;
-      box-shadow: 0 8px 20px #3e8e4180;
-    }
-
-    section h2 {
-      font-weight: 700;
-      font-size: 1.8rem;
-      color: #2f6627;
-      margin-bottom: 1rem;
-      border-bottom: 2px solid #4caf50;
-      padding-bottom: 0.3rem;
-      letter-spacing: 1px;
-    }
-
-    .product-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.8rem;
-    }
-
-    .product-card {
-      background: #ffffffdd;
-      padding: 1.2rem 1.5rem;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .product-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 18px 48px rgb(0 0 0 / 0.2);
-    }
-
-    .product-card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 14px;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
-      transition: transform 0.3s ease;
-    }
-
-    .product-card:hover img {
-      transform: scale(1.05);
-    }
-
-    .product-card h4 {
-      font-weight: 600;
-      font-size: 1.3rem;
-      color: #2f6627;
-      margin-bottom: 0.4rem;
-      text-align: center;
-    }
-
-    .product-card p {
-      font-size: 0.9rem;
-      color: #4a4a4a;
-      line-height: 1.3;
-      margin: 0.2rem 0;
-      text-align: center;
-      user-select: text;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 500px) {
       .container {
-        padding: 1.5rem 1.7rem;
+        background: #fff;
+        border-radius: 16px;
+        max-width: 900px;
+        width: 100%;
+        padding: 2rem 2.5rem;
+        box-shadow: 0 12px 30px rgb(0 0 0 / 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+
+      form h2 {
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: #2f6627;
+        margin-bottom: 1.5rem;
+        letter-spacing: 1px;
       }
 
       form input,
-      form select,
+      form select {
+        font-family: inherit;
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem;
+        border-radius: 10px;
+        border: 1.8px solid #a8d08d;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        outline-offset: 2px;
+      }
+
+      form input:focus,
+      form select:focus {
+        border-color: #4caf50;
+        box-shadow: 0 0 8px #4caf50aa;
+        outline: none;
+      }
+
       form button {
+        background-color: #4caf50;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 0.75rem 0;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        letter-spacing: 1.2px;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 6px 12px rgb(76 175 80 / 0.5);
+        user-select: none;
+      }
+
+      form button:hover {
+        background-color: #3e8e41;
+        box-shadow: 0 8px 20px #3e8e4180;
+      }
+
+      section h2 {
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: #2f6627;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #4caf50;
+        padding-bottom: 0.3rem;
+        letter-spacing: 1px;
+      }
+
+      .product-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.8rem;
+      }
+
+      .ai-insights {
+        margin-top: 2rem;
+        padding: 1.2rem 1.5rem;
+        border-radius: 14px;
+        background: #f4fbf1;
+        box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
+      }
+
+      .ai-insights-actions {
+        margin-top: 0.75rem;
+        padding-left: 1.2rem;
         font-size: 0.95rem;
-        padding: 0.65rem 1rem;
+        color: #3c4a3c;
+      }
+
+      .ai-insights-actions li {
+        margin-bottom: 0.35rem;
+      }
+
+      .ai-insights-status {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #777;
+      }
+
+      .ai-insights button {
+        margin-top: 0.75rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+
+      .ai-insights button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      .product-card {
+        background: #ffffffdd;
+        padding: 1.2rem 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .product-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 48px rgb(0 0 0 / 0.2);
       }
 
       .product-card img {
-        height: 130px;
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 14px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+        transition: transform 0.3s ease;
+      }
+
+      .product-card:hover img {
+        transform: scale(1.05);
       }
 
       .product-card h4 {
-        font-size: 1.2rem;
+        font-weight: 600;
+        font-size: 1.3rem;
+        color: #2f6627;
+        margin-bottom: 0.4rem;
+        text-align: center;
       }
-    }
 
-    .ai-advisor-toggle {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: none;
-      background: #4caf50;
-      color: #fff;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      z-index: 1000;
-    }
-
-    .ai-advisor-toggle:focus {
-      outline: none;
-    }
-
-    .ai-advisor-widget {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      width: 320px;
-      max-height: 420px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      font-family: inherit;
-      z-index: 999;
-    }
-
-    .ai-advisor-widget.open {
-      display: flex;
-    }
-
-    .ai-advisor-header {
-      background: #4caf50;
-      color: #fff;
-      padding: 0.6rem 0.9rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-    }
-
-    .ai-advisor-close {
-      background: transparent;
-      border: none;
-      color: #ffffff;
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-
-    .ai-advisor-messages {
-      flex: 1;
-      padding: 0.6rem 0.7rem;
-      overflow-y: auto;
-      font-size: 0.85rem;
-      background: #f7faf7;
-    }
-
-    .ai-message {
-      margin-bottom: 0.5rem;
-      padding: 0.45rem 0.6rem;
-      border-radius: 8px;
-      max-width: 90%;
-      line-height: 1.35;
-    }
-
-    .ai-message.user {
-      background: #e3f2fd;
-      margin-left: auto;
-    }
-
-    .ai-message.bot {
-      background: #e8f5e9;
-      margin-right: auto;
-    }
-
-    .ai-advisor-input-row {
-      display: flex;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .ai-advisor-input-row input {
-      flex: 1;
-      border: none;
-      padding: 0.5rem 0.6rem;
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    .ai-advisor-input-row button {
-      border: none;
-      background: #4caf50;
-      color: #fff;
-      font-size: 0.85rem;
-      padding: 0 0.9rem;
-      cursor: pointer;
-    }
-
-    .ai-advisor-input-row button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-
-    @media (max-width: 600px) {
-      .ai-advisor-widget {
-        right: 0.75rem;
-        left: 0.75rem;
-        width: auto;
+      .product-card p {
+        font-size: 0.9rem;
+        color: #4a4a4a;
+        line-height: 1.3;
+        margin: 0.2rem 0;
+        text-align: center;
+        user-select: text;
       }
-    }
-  </style>
-</head>
-<body>
 
-<header>
-  🌾 Farmer Dashboard
-</header>
-
-<div class="container">
-  <form id="productForm">
-    <h2>Add New Product</h2>
-    <input type="text" id="name" placeholder="Product Name" required />
-    <input type="text" id="type" placeholder="Type (e.g. Vegetable, Fruit)" required />
-    <input type="number" id="quantity" placeholder="Quantity" required min="1" />
-    <select id="unit" required>
-      <option value="" disabled selected>Select Unit</option>
-      <option value="kg">kg</option>
-      <option value="liters">liters</option>
-      <option value="pcs">pcs</option>
-    </select>
-    <input type="number" id="price_per_unit" placeholder="Price per Unit" required min="0" step="0.01" />
-    <input type="url" id="image_url" placeholder="Image URL" required />
-    <input type="text" id="farmer_id" placeholder="Farmer ID" required />
-    <button type="submit">Add Product</button>
-  </form>
-
-  <section>
-    <h2>My Products</h2>
-    <div class="product-list" id="productList">
-      <!-- Product cards appear here -->
-    </div>
-  </section>
-</div>
-
-<button class="ai-advisor-toggle" id="aiAdvisorToggle" aria-label="Open GreenBuddy advisor">
-  🌾
-</button>
-
-<div class="ai-advisor-widget" id="aiAdvisor">
-  <div class="ai-advisor-header">
-    <span>🌾 Ask GreenBuddy (AI farming advisor)</span>
-    <button class="ai-advisor-close" id="aiAdvisorClose" aria-label="Close advisor">✕</button>
-  </div>
-  <div class="ai-advisor-messages" id="aiAdvisorMessages">
-    <div class="ai-message bot">
-      Ask me about crop selection, fertilizers, pests, soil health, or storage. Include your location and crop for better advice.
-    </div>
-  </div>
-  <div class="ai-advisor-input-row">
-    <input
-      type="text"
-      id="aiAdvisorInput"
-      placeholder="e.g. How much urea for 1 acre of paddy?"
-    />
-    <button id="aiAdvisorSend">Send</button>
-  </div>
-</div>
-
-<script src="farmer-dashboard.js"></script>
-
-<script>
-  (function () {
-    const input = document.getElementById('aiAdvisorInput');
-    const sendBtn = document.getElementById('aiAdvisorSend');
-    const messagesEl = document.getElementById('aiAdvisorMessages');
-    const widget = document.getElementById('aiAdvisor');
-    const toggleBtn = document.getElementById('aiAdvisorToggle');
-    const closeBtn = document.getElementById('aiAdvisorClose');
-
-    function openWidget() {
-      widget.classList.add('open');
-    }
-
-    function closeWidget() {
-      widget.classList.remove('open');
-    }
-
-    toggleBtn.addEventListener('click', function () {
-      if (widget.classList.contains('open')) {
-        closeWidget();
-      } else {
-        openWidget();
-      }
-    });
-
-    closeBtn.addEventListener('click', function () {
-      closeWidget();
-    });
-
-    async function sendQuestion() {
-      const question = input.value.trim();
-      if (!question) return;
-
-      appendMessage(question, 'user');
-      input.value = '';
-      setLoading(true);
-
-      try {
-        const res = await fetch('/ai/advice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          const msg = data.error || 'Failed to get advice';
-          const extra = data.details ? ` - ${data.details}` : '';
-          throw new Error(msg + extra);
+      /* Responsive adjustments */
+      @media (max-width: 500px) {
+        .container {
+          padding: 1.5rem 1.7rem;
         }
 
-        appendMessage(data.answer || 'I could not generate advice right now.', 'bot');
-      } catch (err) {
-        console.error(err);
-        appendMessage('Sorry, something went wrong while fetching advice.', 'bot');
-      } finally {
-        setLoading(false);
+        form input,
+        form select,
+        form button {
+          font-size: 0.95rem;
+          padding: 0.65rem 1rem;
+        }
+
+        .product-card img {
+          height: 130px;
+        }
+
+        .product-card h4 {
+          font-size: 1.2rem;
+        }
       }
-    }
 
-    function appendMessage(text, role) {
-      const div = document.createElement('div');
-      div.className = 'ai-message ' + role;
-      div.textContent = text;
-      messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    function setLoading(isLoading) {
-      sendBtn.disabled = isLoading;
-      sendBtn.textContent = isLoading ? '... ' : 'Send';
-    }
-
-    sendBtn.addEventListener('click', sendQuestion);
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendQuestion();
+      .ai-advisor-toggle {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        z-index: 1000;
       }
-    });
-  })();
-</script>
 
-</body>
+      .ai-advisor-toggle:focus {
+        outline: none;
+      }
+
+      .ai-advisor-widget {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 320px;
+        max-height: 420px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        font-family: inherit;
+        z-index: 999;
+      }
+
+      .ai-advisor-widget.open {
+        display: flex;
+      }
+
+      .ai-advisor-header {
+        background: #4caf50;
+        color: #fff;
+        padding: 0.6rem 0.9rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .ai-advisor-close {
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-size: 1.1rem;
+        cursor: pointer;
+      }
+
+      .ai-advisor-messages {
+        flex: 1;
+        padding: 0.6rem 0.7rem;
+        overflow-y: auto;
+        font-size: 0.85rem;
+        background: #f7faf7;
+      }
+
+      .ai-message {
+        margin-bottom: 0.5rem;
+        padding: 0.45rem 0.6rem;
+        border-radius: 8px;
+        max-width: 90%;
+        line-height: 1.35;
+      }
+
+      .ai-message.user {
+        background: #e3f2fd;
+        margin-left: auto;
+      }
+
+      .ai-message.bot {
+        background: #e8f5e9;
+        margin-right: auto;
+      }
+
+      .ai-advisor-input-row {
+        display: flex;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      .ai-advisor-input-row input {
+        flex: 1;
+        border: none;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.85rem;
+        outline: none;
+      }
+
+      .ai-advisor-input-row button {
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0 0.9rem;
+        cursor: pointer;
+      }
+
+      .ai-advisor-input-row button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      @media (max-width: 600px) {
+        .ai-advisor-widget {
+          right: 0.75rem;
+          left: 0.75rem;
+          width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>🌾 Farmer Dashboard</header>
+
+    <div class="container">
+      <form id="productForm">
+        <h2>Add New Product</h2>
+        <input type="text" id="name" placeholder="Product Name" required />
+        <input
+          type="text"
+          id="type"
+          placeholder="Type (e.g. Vegetable, Fruit)"
+          required
+        />
+        <input
+          type="number"
+          id="quantity"
+          placeholder="Quantity"
+          required
+          min="1"
+        />
+        <select id="unit" required>
+          <option value="" disabled selected>Select Unit</option>
+          <option value="kg">kg</option>
+          <option value="liters">liters</option>
+          <option value="pcs">pcs</option>
+        </select>
+        <input
+          type="number"
+          id="price_per_unit"
+          placeholder="Price per Unit"
+          required
+          min="0"
+          step="0.01"
+        />
+        <input type="url" id="image_url" placeholder="Image URL" required />
+        <input type="text" id="farmer_id" placeholder="Farmer ID" required />
+        <button type="submit">Add Product</button>
+      </form>
+
+      <section>
+        <h2>My Products</h2>
+        <div class="product-list" id="productList">
+          <!-- Product cards appear here -->
+        </div>
+      </section>
+
+      <section class="ai-insights" id="aiInsightsSection">
+        <h2>AI Farm Insights</h2>
+        <p id="aiInsightsSummary">
+          Click "Generate insights" to see suggestions based on your current
+          products.
+        </p>
+        <ul id="aiInsightsActions" class="ai-insights-actions"></ul>
+        <button id="aiInsightsRefresh" type="button">Generate insights</button>
+        <div id="aiInsightsStatus" class="ai-insights-status"></div>
+      </section>
+    </div>
+
+    <button
+      class="ai-advisor-toggle"
+      id="aiAdvisorToggle"
+      aria-label="Open GreenBuddy advisor"
+    >
+      🌾
+    </button>
+
+    <div class="ai-advisor-widget" id="aiAdvisor">
+      <div class="ai-advisor-header">
+        <span>🌾 Ask GreenBuddy (AI farming advisor)</span>
+        <button
+          class="ai-advisor-close"
+          id="aiAdvisorClose"
+          aria-label="Close advisor"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="ai-advisor-messages" id="aiAdvisorMessages">
+        <div class="ai-message bot">
+          Ask me about crop selection, fertilizers, pests, soil health, or
+          storage. Include your location and crop for better advice.
+        </div>
+      </div>
+      <div class="ai-advisor-input-row">
+        <input
+          type="text"
+          id="aiAdvisorInput"
+          placeholder="e.g. How much urea for 1 acre of paddy?"
+        />
+        <button id="aiAdvisorSend">Send</button>
+      </div>
+    </div>
+
+    <script src="farmer-dashboard.js"></script>
+
+    <script>
+      (function () {
+        const input = document.getElementById("aiAdvisorInput");
+        const sendBtn = document.getElementById("aiAdvisorSend");
+        const messagesEl = document.getElementById("aiAdvisorMessages");
+        const widget = document.getElementById("aiAdvisor");
+        const toggleBtn = document.getElementById("aiAdvisorToggle");
+        const closeBtn = document.getElementById("aiAdvisorClose");
+
+        function openWidget() {
+          widget.classList.add("open");
+        }
+
+        function closeWidget() {
+          widget.classList.remove("open");
+        }
+
+        toggleBtn.addEventListener("click", function () {
+          if (widget.classList.contains("open")) {
+            closeWidget();
+          } else {
+            openWidget();
+          }
+        });
+
+        closeBtn.addEventListener("click", function () {
+          closeWidget();
+        });
+
+        async function sendQuestion() {
+          const question = input.value.trim();
+          if (!question) return;
+
+          appendMessage(question, "user");
+          input.value = "";
+          setLoading(true);
+
+          try {
+            const res = await fetch("http://localhost:3000/ai/advice", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ question }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              const msg = data.error || "Failed to get advice";
+              const extra = data.details ? ` - ${data.details}` : "";
+              throw new Error(msg + extra);
+            }
+
+            appendMessage(
+              data.answer || "I could not generate advice right now.",
+              "bot"
+            );
+          } catch (err) {
+            console.error(err);
+            appendMessage(
+              "Sorry, something went wrong while fetching advice.",
+              "bot"
+            );
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        function appendMessage(text, role) {
+          const div = document.createElement("div");
+          div.className = "ai-message " + role;
+          div.textContent = text;
+          messagesEl.appendChild(div);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function setLoading(isLoading) {
+          sendBtn.disabled = isLoading;
+          sendBtn.textContent = isLoading ? "... " : "Send";
+        }
+
+        sendBtn.addEventListener("click", sendQuestion);
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            sendQuestion();
+          }
+        });
+      })();
+    </script>
+  </body>
 </html>

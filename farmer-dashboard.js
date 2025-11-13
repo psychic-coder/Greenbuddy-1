@@ -3,9 +3,15 @@
   const productList = document.getElementById('productList');
   const farmerIdInput = document.getElementById('farmer_id');
 
+  // AI Farm Insights elements
+  const insightsSection = document.getElementById('aiInsightsSection');
+  const insightsSummaryEl = document.getElementById('aiInsightsSummary');
+  const insightsActionsEl = document.getElementById('aiInsightsActions');
+  const insightsRefreshBtn = document.getElementById('aiInsightsRefresh');
+  const insightsStatusEl = document.getElementById('aiInsightsStatus');
+
   let products = [];
 
-  
   const defaultFarmerId = 1;
 //   fetchFarmerProducts(defaultFarmerId);
 
@@ -63,4 +69,68 @@
     });
   }
 
+  async function fetchAiInsights(farmerId) {
+    if (!insightsSection || !insightsRefreshBtn) return;
+
+    const effectiveFarmerId = farmerId || farmerIdInput?.value || defaultFarmerId;
+
+    insightsRefreshBtn.disabled = true;
+    insightsRefreshBtn.textContent = 'Generating...';
+    if (insightsStatusEl) {
+      insightsStatusEl.textContent = 'Asking GreenBuddy for insights...';
+    }
+
+    try {
+      const res = await fetch('http://localhost:3000/ai/farm-insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ farmer_id: effectiveFarmerId })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = data.error || 'Failed to load AI farm insights.';
+        throw new Error(msg);
+      }
+
+      if (insightsSummaryEl) {
+        insightsSummaryEl.textContent = data.summary || 'No insights available at the moment.';
+      }
+
+      if (insightsActionsEl) {
+        insightsActionsEl.innerHTML = '';
+        if (Array.isArray(data.actions) && data.actions.length > 0) {
+          data.actions.forEach(action => {
+            const li = document.createElement('li');
+            li.textContent = action;
+            insightsActionsEl.appendChild(li);
+          });
+        }
+      }
+
+      if (insightsStatusEl) {
+        insightsStatusEl.textContent = 'Insights updated.';
+      }
+    } catch (err) {
+      console.error('Error fetching AI farm insights:', err);
+      if (insightsStatusEl) {
+        insightsStatusEl.textContent = 'Sorry, AI insights are temporarily unavailable.';
+      }
+    } finally {
+      if (insightsRefreshBtn) {
+        insightsRefreshBtn.disabled = false;
+        insightsRefreshBtn.textContent = 'Generate insights';
+      }
+    }
+  }
+
+  if (insightsRefreshBtn) {
+    insightsRefreshBtn.addEventListener('click', function () {
+      const idFromInput = farmerIdInput?.value || defaultFarmerId;
+      fetchAiInsights(idFromInput);
+    });
+  }
+
   fetchFarmerProducts(defaultFarmerId);
+  // Automatically load insights for the default farmer on page load
+  fetchAiInsights(defaultFarmerId);

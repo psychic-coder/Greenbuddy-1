@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
+const axios = require('axios');
 const app = express();
 const cors = require('cors');
 
@@ -155,6 +156,77 @@ app.get('/inventory', (req, res) => {
         res.json({ products: result.rows });
     });
 });
+
+// 🤖 AI crop & farming advisor
+app.post('/ai/advice', async (req, res) => {
+    const { question, location, crop } = req.body || {};
+
+    if (!question || typeof question !== 'string') {
+        return res.status(400).json({ error: 'Question is required.' });
+    }
+
+    const apiKey =
+      "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";
+    if (!apiKey) {
+        return res.status(500).json({ error: 'AI advisor is not configured. Please set OPENROUTER_API_KEY.' });
+    }
+
+
+    const systemPrompt = `You are GreenBuddy, an expert agricultural advisor helping small farmers and consumers.
+Always give practical, concise advice about crops, soil, weather, pests, organic practices, and storage.
+If asked for something unrelated to farming, politely steer the conversation back to agriculture.`;
+
+    let userContent = `User question: ${question}`;
+    if (location) {
+        userContent += `\nLocation: ${location}`;
+    }
+    if (crop) {
+        userContent += `\nCrop: ${crop}`;
+    }
+
+    try {
+        const response = await axios.post(
+          "https://openrouter.ai/api/v1/chat/completions",
+            {
+                model: 'openai/gpt-5.1-chat',
+                max_tokens: 3000,
+                messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: `${systemPrompt}\n\n${userContent}`,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "http://localhost:3000",
+              "X-Title": "GreenBuddy AI Advisor",
+            },
+            timeout: 20000,
+          }
+        );
+
+        const answer = response.data?.choices?.[0]?.message?.content?.trim();
+        return res.json({ answer: answer || 'Sorry, I could not generate advice right now.' });
+    } catch (err) {
+        const openrouterError = err.response?.data || err.message || err;
+        console.error('OpenRouter error:', openrouterError);
+        return res.status(500).json({
+            error: 'Failed to get AI advice from OpenRouter.',
+            details: typeof openrouterError === 'string'
+                ? openrouterError
+                : JSON.stringify(openrouterError)
+        });
+    }
+});
+
 app.post('/get-customer-orders', (req, res) => {
     const { customer_id } = req.body;  
 
@@ -191,5 +263,5 @@ app.post('/get-customer-orders', (req, res) => {
 
 // ✅ Server
 app.listen(3000, () => {
-    console.log('🌾 Server running at http://localhost:4000');
+    console.log('🌾 Server running at http://localhost:3000');
 });

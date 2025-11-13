@@ -19,6 +19,132 @@
 
     <!-- custom css file link  -->
     <link rel="stylesheet" href="style.css" />
+
+    <style>
+      .ai-advisor-toggle {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        z-index: 1000;
+      }
+
+      .ai-advisor-toggle:focus {
+        outline: none;
+      }
+
+      .ai-advisor-widget {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 320px;
+        max-height: 420px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        font-family: inherit;
+        z-index: 999;
+      }
+
+      .ai-advisor-widget.open {
+        display: flex;
+      }
+
+      .ai-advisor-header {
+        background: #4caf50;
+        color: #fff;
+        padding: 0.6rem 0.9rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .ai-advisor-close {
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-size: 1.1rem;
+        cursor: pointer;
+      }
+
+      .ai-advisor-messages {
+        flex: 1;
+        padding: 0.6rem 0.7rem;
+        overflow-y: auto;
+        font-size: 0.85rem;
+        background: #f7faf7;
+      }
+
+      .ai-message {
+        margin-bottom: 0.5rem;
+        padding: 0.45rem 0.6rem;
+        border-radius: 8px;
+        max-width: 90%;
+        line-height: 1.35;
+      }
+
+      .ai-message.user {
+        background: #e3f2fd;
+        margin-left: auto;
+      }
+
+      .ai-message.bot {
+        background: #e8f5e9;
+        margin-right: auto;
+      }
+
+      .ai-advisor-input-row {
+        display: flex;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      .ai-advisor-input-row input {
+        flex: 1;
+        border: none;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.85rem;
+        outline: none;
+      }
+
+      .ai-advisor-input-row button {
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0 0.9rem;
+        cursor: pointer;
+      }
+
+      .ai-advisor-input-row button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      @media (max-width: 600px) {
+        .ai-advisor-widget {
+          right: 0.75rem;
+          left: 0.75rem;
+          width: auto;
+        }
+      }
+    </style>
   </head>
   <body>
     <!-- header section starts  -->
@@ -438,11 +564,119 @@
 
     <!-- custom js file link  -->
     <script src="script.js"></script>
+
+    <button class="ai-advisor-toggle" id="aiAdvisorToggle" aria-label="Open GreenBuddy advisor">
+      <i class="fas fa-comments"></i>
+    </button>
+
+    <div class="ai-advisor-widget" id="aiAdvisor">
+      <div class="ai-advisor-header">
+        <span>🌾 Ask GreenBuddy (AI farming advisor)</span>
+        <button class="ai-advisor-close" id="aiAdvisorClose" aria-label="Close advisor">✕</button>
+      </div>
+      <div class="ai-advisor-messages" id="aiAdvisorMessages">
+        <div class="ai-message bot">
+          Ask me about crops, soil, pests, organic practices, or storage. Include your location and crop for better advice.
+        </div>
+      </div>
+      <div class="ai-advisor-input-row">
+        <input
+          type="text"
+          id="aiAdvisorInput"
+          placeholder="e.g. Best crop for kharif season in Andhra?"
+        />
+        <button id="aiAdvisorSend">Send</button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const input = document.getElementById('aiAdvisorInput');
+        const sendBtn = document.getElementById('aiAdvisorSend');
+        const messagesEl = document.getElementById('aiAdvisorMessages');
+        const widget = document.getElementById('aiAdvisor');
+        const toggleBtn = document.getElementById('aiAdvisorToggle');
+        const closeBtn = document.getElementById('aiAdvisorClose');
+
+        function openWidget() {
+          widget.classList.add('open');
+        }
+
+        function closeWidget() {
+          widget.classList.remove('open');
+        }
+
+        toggleBtn.addEventListener('click', function () {
+          if (widget.classList.contains('open')) {
+            closeWidget();
+          } else {
+            openWidget();
+          }
+        });
+
+        closeBtn.addEventListener('click', function () {
+          closeWidget();
+        });
+
+        async function sendQuestion() {
+          const question = input.value.trim();
+          if (!question) return;
+
+          appendMessage(question, 'user');
+          input.value = '';
+          setLoading(true);
+
+          try {
+            const res = await fetch('http://localhost:3000/ai/advice', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ question })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              const msg = data.error || 'Failed to get advice';
+              const extra = data.details ? ` - ${data.details}` : '';
+              throw new Error(msg + extra);
+            }
+
+            appendMessage(data.answer || 'I could not generate advice right now.', 'bot');
+          } catch (err) {
+            console.error(err);
+            appendMessage('Sorry, something went wrong while fetching advice.', 'bot');
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        function appendMessage(text, role) {
+          const div = document.createElement('div');
+          div.className = 'ai-message ' + role;
+          div.textContent = text;
+          messagesEl.appendChild(div);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function setLoading(isLoading) {
+          sendBtn.disabled = isLoading;
+          sendBtn.textContent = isLoading ? '... ' : 'Send';
+        }
+
+        sendBtn.addEventListener('click', sendQuestion);
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendQuestion();
+          }
+        });
+      })();
+    </script>
+
     <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1%22%3E"> </script>
-<df-messenger intent="WELCOME" chat-title="GreenBuddy"
-  agent-id="e1f83922-37a6-488b-9c06-b8cc656319b3"
-  language-code="en"
-></df-messenger>
+    <df-messenger intent="WELCOME" chat-title="GreenBuddy"
+      agent-id="e1f83922-37a6-488b-9c06-b8cc656319b3"
+      language-code="en"
+    ></df-messenger>
    
   </body>
 </html>

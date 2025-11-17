@@ -645,7 +645,8 @@
             body: JSON.stringify({
               audioBase64,
               mimeType,
-              language: 'auto',
+              // Do NOT send "auto" as a language; omit language so Whisper can auto-detect.
+              // If you want to force a language, pass e.g. language: "hi" or "bn" instead.
             }),
           });
 

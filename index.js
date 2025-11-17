@@ -6,8 +6,7 @@ const FormData = require("form-data");
 const app = express();
 const cors = require("cors");
 
-const OPENROUTER_API_KEY =
-  "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";
+const OPENROUTER_API_KEY ="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";
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));

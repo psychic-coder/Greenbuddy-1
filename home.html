@@ -132,6 +132,17 @@
         cursor: pointer;
       }
 
+      .ai-advisor-voice-btn {
+        background: #2e7d32;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .ai-advisor-voice-btn.recording {
+        background: #c62828;
+      }
+
       .ai-advisor-input-row button:disabled {
         opacity: 0.6;
         cursor: default;
@@ -583,8 +594,15 @@
         <input
           type="text"
           id="aiAdvisorInput"
-          placeholder="e.g. Best crop for kharif season in Andhra?"
+          placeholder="Type your question or use the mic…"
         />
+        <button
+          id="aiAdvisorVoice"
+          class="ai-advisor-voice-btn"
+          title="Hold to speak or tap to start/stop recording"
+        >
+          <i class="fas fa-microphone"></i>
+        </button>
         <button id="aiAdvisorSend">Send</button>
       </div>
     </div>
@@ -593,10 +611,15 @@
       (function () {
         const input = document.getElementById('aiAdvisorInput');
         const sendBtn = document.getElementById('aiAdvisorSend');
+        const voiceBtn = document.getElementById('aiAdvisorVoice');
         const messagesEl = document.getElementById('aiAdvisorMessages');
         const widget = document.getElementById('aiAdvisor');
         const toggleBtn = document.getElementById('aiAdvisorToggle');
         const closeBtn = document.getElementById('aiAdvisorClose');
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
 
         function openWidget() {
           widget.classList.add('open');
@@ -659,8 +682,107 @@
 
         function setLoading(isLoading) {
           sendBtn.disabled = isLoading;
+          voiceBtn.disabled = isLoading;
           sendBtn.textContent = isLoading ? '... ' : 'Send';
         }
+
+        async function startRecording() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+            mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                audioChunks.push(event.data);
+              }
+            };
+
+            mediaRecorder.onstop = async () => {
+              try {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+
+                reader.onloadend = async () => {
+                  const dataUrl = reader.result;
+                  const base64 = dataUrl.split(',')[1];
+                  if (!base64) {
+                    appendMessage('Could not capture audio properly.', 'bot');
+                    return;
+                  }
+
+                  setLoading(true);
+                  appendMessage('🎙️ (voice message sent)', 'user');
+
+                  try {
+                    const res = await fetch('http://localhost:3000/ai/transcribe', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        audioBase64: base64,
+                        mimeType: 'audio/webm',
+                      }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                      const msg = data.error || 'Failed to process voice input';
+                      const extra = data.details ? ` - ${data.details}` : '';
+                      throw new Error(msg + extra);
+                    }
+
+                    if (data.text) {
+                      appendMessage(`You said: ${data.text}`, 'user');
+                    }
+
+                    appendMessage(
+                      data.answer || 'I could not generate advice from your voice input right now.',
+                      'bot'
+                    );
+                  } catch (err) {
+                    console.error(err);
+                    appendMessage('Sorry, something went wrong while processing your voice input.', 'bot');
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+
+                reader.readAsDataURL(blob);
+              } catch (err) {
+                console.error('Error handling recorded audio:', err);
+                appendMessage('Error while handling recorded audio.', 'bot');
+              }
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            voiceBtn.classList.add('recording');
+            voiceBtn.innerHTML = '<i class="fas fa-square"></i>';
+            appendMessage('Listening... tap the mic again to stop.', 'bot');
+          } catch (err) {
+            console.error('Microphone access denied or unavailable:', err);
+            appendMessage('Could not access your microphone. Please allow mic permissions.', 'bot');
+          }
+        }
+
+        function stopRecording() {
+          if (mediaRecorder) {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach((t) => t.stop());
+            mediaRecorder = null;
+          }
+          isRecording = false;
+          voiceBtn.classList.remove('recording');
+          voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        }
+
+        voiceBtn.addEventListener('click', function () {
+          if (isRecording) {
+            stopRecording();
+          } else {
+            startRecording();
+          }
+        });
 
         sendBtn.addEventListener('click', sendQuestion);
         input.addEventListener('keydown', function (e) {

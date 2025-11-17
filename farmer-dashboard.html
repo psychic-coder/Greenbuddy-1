@@ -324,32 +324,48 @@
         margin-right: auto;
       }
 
-      .ai-advisor-input-row {
-        display: flex;
-        border-top: 1px solid #e0e0e0;
-      }
+    .ai-advisor-input-row {
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      align-items: stretch;
+    }
 
-      .ai-advisor-input-row input {
-        flex: 1;
-        border: none;
-        padding: 0.5rem 0.6rem;
-        font-size: 0.85rem;
-        outline: none;
-      }
+    .ai-advisor-input-row input {
+      flex: 1;
+      border: none;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.85rem;
+      outline: none;
+    }
 
-      .ai-advisor-input-row button {
-        border: none;
-        background: #4caf50;
-        color: #fff;
-        font-size: 0.85rem;
-        padding: 0 0.9rem;
-        cursor: pointer;
-      }
+    .ai-advisor-input-row button {
+      border: none;
+      background: #4caf50;
+      color: #fff;
+      font-size: 0.85rem;
+      padding: 0 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-      .ai-advisor-input-row button:disabled {
-        opacity: 0.6;
-        cursor: default;
-      }
+    .ai-advisor-input-row button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .ai-advisor-mic {
+      background: #ffffff;
+      color: #4caf50;
+      border-left: 1px solid #e0e0e0;
+      min-width: 40px;
+    }
+
+    .ai-advisor-mic.listening {
+      background: #ffeb3b;
+      color: #333;
+    }
 
       @media (max-width: 600px) {
         .ai-advisor-widget {
@@ -437,32 +453,40 @@
           ✕
         </button>
       </div>
-      <div class="ai-advisor-messages" id="aiAdvisorMessages">
-        <div class="ai-message bot">
-          Ask me about crop selection, fertilizers, pests, soil health, or
-          storage. Include your location and crop for better advice.
-        </div>
-      </div>
-      <div class="ai-advisor-input-row">
-        <input
-          type="text"
-          id="aiAdvisorInput"
-          placeholder="e.g. How much urea for 1 acre of paddy?"
-        />
-        <button id="aiAdvisorSend">Send</button>
-      </div>
+  <div class="ai-advisor-messages" id="aiAdvisorMessages">
+    <div class="ai-message bot">
+      Ask me about crop selection, fertilizers, pests, soil health, or storage. Include your location and crop for better advice.
+    </div>
+  </div>
+  <div class="ai-advisor-input-row">
+    <input
+      type="text"
+      id="aiAdvisorInput"
+      placeholder="e.g. How much urea for 1 acre of paddy?"
+    />
+    <button
+      type="button"
+      class="ai-advisor-mic"
+      id="aiAdvisorMic"
+      aria-label="Speak your question"
+      title="Speak your question"
+    >🎙</button>
+    <button id="aiAdvisorSend" type="button">Send</button>
+  </div>
+</div>
     </div>
 
     <script src="farmer-dashboard.js"></script>
 
     <script>
       (function () {
-        const input = document.getElementById("aiAdvisorInput");
-        const sendBtn = document.getElementById("aiAdvisorSend");
-        const messagesEl = document.getElementById("aiAdvisorMessages");
-        const widget = document.getElementById("aiAdvisor");
-        const toggleBtn = document.getElementById("aiAdvisorToggle");
-        const closeBtn = document.getElementById("aiAdvisorClose");
+    const input = document.getElementById('aiAdvisorInput');
+    const sendBtn = document.getElementById('aiAdvisorSend');
+    const micBtn = document.getElementById('aiAdvisorMic');
+    const messagesEl = document.getElementById('aiAdvisorMessages');
+    const widget = document.getElementById('aiAdvisor');
+    const toggleBtn = document.getElementById('aiAdvisorToggle');
+    const closeBtn = document.getElementById('aiAdvisorClose');
 
         function openWidget() {
           widget.classList.add("open");
@@ -529,18 +553,141 @@
           messagesEl.scrollTop = messagesEl.scrollHeight;
         }
 
-        function setLoading(isLoading) {
-          sendBtn.disabled = isLoading;
-          sendBtn.textContent = isLoading ? "... " : "Send";
-        }
+    function setLoading(isLoading) {
+      sendBtn.disabled = isLoading;
+      sendBtn.textContent = isLoading ? '... ' : 'Send';
+    }
 
-        sendBtn.addEventListener("click", sendQuestion);
-        input.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            sendQuestion();
-          }
+    // Voice input using Whisper via backend
+    (function setupVoiceInput() {
+      if (!micBtn) return;
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        micBtn.disabled = true;
+        micBtn.title = 'Voice input is not supported in this browser.';
+        return;
+      }
+
+      let mediaRecorder = null;
+      let chunks = [];
+      let isRecording = false;
+
+      function resetMic() {
+        isRecording = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎙';
+      }
+
+      async function startRecording() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          chunks = [];
+
+          mediaRecorder.ondataavailable = function (e) {
+            if (e.data && e.data.size > 0) {
+              chunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = async function () {
+            try {
+              const blob = new Blob(chunks, { type: 'audio/webm' });
+              const base64 = await blobToBase64(blob);
+              await sendToWhisper(base64, blob.type);
+            } catch (e) {
+              console.error('Error handling recorded audio:', e);
+            } finally {
+              resetMic();
+            }
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          micBtn.classList.add('listening');
+          micBtn.textContent = '…';
+        } catch (err) {
+          console.error('Error starting audio recording:', err);
+          micBtn.disabled = true;
+          micBtn.title = 'Microphone access denied or unavailable.';
+          resetMic();
+        }
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        } else {
+          resetMic();
+        }
+      }
+
+      function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const dataUrl = reader.result;
+            const base64 = String(dataUrl).split(',')[1] || '';
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
         });
+      }
+
+      async function sendToWhisper(audioBase64, mimeType) {
+        try {
+          micBtn.disabled = true;
+          micBtn.textContent = '…';
+
+          const res = await fetch('http://localhost:5000/transcribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audioBase64,
+              mimeType,
+              language: 'auto',
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            const msg = data.error || 'Failed to transcribe audio';
+            console.error('Whisper error:', data.details || msg);
+            return;
+          }
+
+          const transcript = data.text || '';
+          if (transcript) {
+            if (input.value) {
+              input.value = input.value + ' ' + transcript;
+            } else {
+              input.value = transcript;
+            }
+          }
+        } catch (err) {
+          console.error('Error sending audio to Whisper:', err);
+        } finally {
+          micBtn.disabled = false;
+          micBtn.textContent = '🎙';
+        }
+      }
+
+      micBtn.addEventListener('click', function () {
+        if (!isRecording) {
+          startRecording();
+        } else {
+          stopRecording();
+        }
+      });
+    })();
+
+    sendBtn.addEventListener('click', sendQuestion);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendQuestion();
+      }
+    });
       })();
     </script>
   </body>
